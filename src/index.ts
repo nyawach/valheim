@@ -3,10 +3,17 @@
  */
 import { InteractionResponseType, InteractionType, verifyKey } from 'discord-interactions'
 import { Response } from 'express'
+// @ts-ignore
+import Compute from '@google-cloud/compute'
 import dotenv from 'dotenv'
 dotenv.config()
 
 const CLIENT_PUBLIC_KEY = process.env.CLIENT_PUBLIC_KEY
+
+const compute = new Compute()
+const zone = compute.zone('asia-northeast1-a')
+const vm = zone.vm('valheim')
+
 
 export const main = async (req: any, res: Response) => {
   if(!CLIENT_PUBLIC_KEY) {
@@ -28,14 +35,34 @@ export const main = async (req: any, res: Response) => {
 
   const interaction = req.body
   if(interaction && interaction.type === InteractionType.APPLICATION_COMMAND) {
-    res.send({
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: `${interaction.data.name}コマンド用アプリです`
-      },
-    })
+    const option = interaction.data.options[0]
+    if(!option) {
+      return res.status(401).send('invalid request signature')
+    }
+    switch(option.name) {
+      case 'status':
+      break
+      case 'stop':
+        await vm.stop()
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: `Valheimサーバーを停止してます... :loading:`
+          },
+        })
+      case 'start':
+        await vm.start()
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
+          },
+        })
+      default:
+      break
+    }
   } else {
-    res.send({
+    return res.send({
       type: InteractionResponseType.PONG,
     })
   }
