@@ -7,8 +7,8 @@
     "build": "webpack && \\cp -f ./package.json ./dist && \\cp -f ./.env ./dist",
     "register": "ts-node -r tsconfig-paths/register ./scripts/register.ts",
     "lint": "eslint --ext .ts --ignore-path .gitignore --fix",
-    "deploy": "gcloud functions deploy main --source=./dist --entry-point=main --trigger-http --runtime=nodejs14 --region=asia-northeast1 --allow-unauthenticated",
-    "destroy": "gcloud functions delete main"
+    "functions:deploy": "gcloud functions deploy main --source=./dist --entry-point=main --trigger-http --runtime=nodejs14 --region=asia-northeast1 --allow-unauthenticated",
+    "functions:destroy": "gcloud functions delete main"
   },
   "keywords": [],
   "author": "",
