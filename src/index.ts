@@ -47,7 +47,7 @@ export const main = async (req: any, res: Response) => {
         return res.send({
           type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
-            content: `Valheimサーバーを停止してます... :loading:`
+            content: `Valheimサーバーを停止してます...`
           },
         })
       case 'start':
