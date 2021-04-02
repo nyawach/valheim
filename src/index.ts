@@ -1,11 +1,14 @@
 /**
- * @ref https://github.com/discord/discord-interactions-js/blob/main/examples/gcloud_function.js
+ * @see https://github.com/discord/discord-interactions-js/blob/main/examples/gcloud_function.js
  */
-import { InteractionResponseType, InteractionType, verifyKey } from 'discord-interactions'
-import { Response } from 'express'
+
+import express from 'express'
 // @ts-ignore
 import Compute from '@google-cloud/compute'
 import dotenv from 'dotenv'
+import { InteractionResponseType, InteractionType } from 'discord-interactions'
+import { verifyKeyMiddleware } from './vertifyKeyMiddleware'
+
 dotenv.config()
 
 const CLIENT_PUBLIC_KEY = process.env.CLIENT_PUBLIC_KEY
@@ -14,57 +17,70 @@ const compute = new Compute()
 const zone = compute.zone('asia-northeast1-a')
 const vm = zone.vm('valheim')
 
+const app = express()
 
-export const main = async (req: any, res: Response) => {
-  if(!CLIENT_PUBLIC_KEY) {
-    return res.status(401).send('invalid request signature')
-  }
+app.use(express.raw())
 
-  const sig = req.get('x-signature-ed25519')
-  const time = req.get('x-signature-timestamp')
+app.post('/', verifyKeyMiddleware(CLIENT_PUBLIC_KEY || ''), async (req, res) => {
 
-  if(!sig || !time) {
-    return res.status(401).send('invalid request signature')
-  }
-
-  const isValid = await verifyKey(req.rawBody, sig, time, CLIENT_PUBLIC_KEY)
-
-  if (!isValid) {
-    return res.status(401).send('invalid request signature')
+  const sendError = (err: Error) => {
+    console.error(err)
+    res.end({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: `コマンドの実行に失敗しました。`
+      },
+    })
   }
 
   const interaction = req.body
-  if(interaction && interaction.type === InteractionType.APPLICATION_COMMAND) {
-    const option = interaction.data.options[0]
-    if(!option) {
-      return res.status(401).send('invalid request signature')
-    }
-    switch(option.name) {
-      case 'status':
-      break
-      case 'stop':
-        await vm.stop()
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            content: `Valheimサーバーを停止してます...`
-          },
-        })
-      case 'start':
-        await vm.start()
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            content: `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
-          },
-        })
-      default:
-      break
-    }
-  } else {
-    return res.send({
-      type: InteractionResponseType.PONG,
-    })
+  if(!(interaction && interaction.type === InteractionType.APPLICATION_COMMAND)) {
+    return res.status(500).send({ message: 'Internal Server Error' })
   }
-  return res.status(401).send('invalid request signature')
-}
+  const option = interaction.data.options[0]
+  if(!option) {
+    return res.status(500).send({ message: 'Internal Server Error' })
+  }
+  switch(option.name) {
+    case 'status': {
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `Valheimサーバー用のコマンド status は未実装です。`
+        },
+      })
+      return
+    }
+    case 'stop': {
+      await vm.stop().catch(sendError)
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `Valheimサーバーを停止してます。数分後に停止します。`
+        },
+      })
+      return
+    }
+    case 'start': {
+      await vm.start().catch(sendError)
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
+        },
+      })
+      return
+    }
+    default: {
+      res.send({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: `Valheimサーバー用コマンドです。`
+        },
+      })
+      return
+    }
+  }
+})
+
+export const main = app
