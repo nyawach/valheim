@@ -34,53 +34,46 @@ app.post('/', verifyKeyMiddleware(CLIENT_PUBLIC_KEY || ''), async (req, res) => 
   }
 
   const interaction = req.body
+
   if(!(interaction && interaction.type === InteractionType.APPLICATION_COMMAND)) {
-    return res.status(500).send({ message: 'Internal Server Error' })
+    sendError(new Error('コマンドの実行に失敗しました。'))
   }
+
   const option = interaction.data.options[0]
+
   if(!option) {
-    return res.status(500).send({ message: 'Internal Server Error' })
+    sendError(new Error('コマンドの実行に失敗しました。'))
   }
+
+  let content = ''
+
   switch(option.name) {
     case 'status': {
-      res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: `Valheimサーバー用のコマンド status は未実装です。`
-        },
-      })
-      return
+      content = `Valheimサーバー用のコマンド status は未実装です。`
+      break
     }
     case 'stop': {
       await vm.stop().catch(sendError)
-      res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: `Valheimサーバーを停止してます。数分後に停止します。`
-        },
-      })
-      return
+      content = `Valheimサーバーを停止してます。数分後に停止します。`
+      break
     }
     case 'start': {
       await vm.start().catch(sendError)
-      res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
-        },
-      })
-      return
+      content = `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
+      break
     }
     default: {
-      res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: `Valheimサーバー用コマンドです。`
-        },
-      })
-      return
+      content = `Valheimサーバー用コマンドです。`
+      break
     }
   }
+
+  res.status(200).send({
+    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    data: {
+      content
+    },
+  })
 })
 
 export const main = app
