@@ -3,19 +3,17 @@
  */
 
 import express from 'express'
-// @ts-ignore
-import Compute from '@google-cloud/compute'
 import dotenv from 'dotenv'
 import { InteractionResponseType, InteractionType } from 'discord-interactions'
 import { verifyKeyMiddleware } from './vertifyKeyMiddleware'
+import * as instance from './instance'
 
 dotenv.config()
 
 const CLIENT_PUBLIC_KEY = process.env.CLIENT_PUBLIC_KEY
-
-const compute = new Compute()
-const zone = compute.zone('asia-northeast1-a')
-const vm = zone.vm('valheim')
+const ZONE = process.env.ZONE || 'asia-northeast1-a'
+const INSTANCE_NAME = process.env.INSTANCE_NAME || 'valheim'
+const PROJECT_ID = process.env.PROJECT_ID || ''
 
 const app = express()
 
@@ -47,25 +45,30 @@ app.post('/', verifyKeyMiddleware(CLIENT_PUBLIC_KEY || ''), async (req, res) => 
 
   let content = ''
 
-  switch(option.name) {
-    case 'status': {
-      content = `Valheimサーバー用のコマンド status は未実装です。`
-      break
+  try {
+    switch(option.name) {
+      case 'status': {
+        const status = await instance.status(PROJECT_ID, ZONE, INSTANCE_NAME)
+        content = `サーバーの状態は ${status || '不明' } です`
+        break
+      }
+      case 'stop': {
+        await instance.stop(PROJECT_ID, ZONE, INSTANCE_NAME)
+        content = `Valheimサーバーを停止してます。数分後に停止します。`
+        break
+      }
+      case 'start': {
+        await instance.start(PROJECT_ID, ZONE, INSTANCE_NAME)
+        content = `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
+        break
+      }
+      default: {
+        content = `Valheimサーバー用コマンドです。`
+        break
+      }
     }
-    case 'stop': {
-      await vm.stop().catch(sendError)
-      content = `Valheimサーバーを停止してます。数分後に停止します。`
-      break
-    }
-    case 'start': {
-      await vm.start().catch(sendError)
-      content = `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
-      break
-    }
-    default: {
-      content = `Valheimサーバー用コマンドです。`
-      break
-    }
+  } catch(err) {
+    sendError(err as Error)
   }
 
   res.status(200).send({

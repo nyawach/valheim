@@ -74,6 +74,9 @@ web_modules/
 .env
 .env.test
 
+# envrc
+.envrc
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 

@@ -1,12 +1,14 @@
-deploy-all: deploy-shotdown-script deploy-startup-script
+include .env
+
+attach-all: attach-shutdown-script attach-startup-script
 
 login:
 	gloud login
 
-deploy-startup-script:
-	gcloud compute instances update valheim \
-	--metadata-form-file startup-script=./scripts/startup.sh
+attach-startup-script:
+	gcloud compute instances add-metadata ${INSTANCE_NAME} \
+		--metadata-from-file startup-script=./scripts/startup.sh
 
-deploy-shutdown-script:
-	gcloud compute instances update valheim \
-	--metadata-form-file shutdown-script=./scripts/shutdown.sh
+attach-shutdown-script:
+	gcloud compute instances add-metadata ${INSTANCE_NAME} \
+		--metadata-from-file startup-script=./scripts/shutdown.sh

@@ -5,6 +5,7 @@
       "module": "CommonJS",
       "outDir": "./dist",
       "rootDir": "./",
+      "baseUrl": "./",
       "removeComments": true,
       "strict": true,
       "noImplicitThis": true,
