@@ -5,15 +5,12 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import { InteractionResponseType, InteractionType } from 'discord-interactions'
-import { verifyKeyMiddleware } from './vertifyKeyMiddleware'
-import * as instance from './instance'
+import { verifyKeyMiddleware } from '../../vertifyKeyMiddleware'
+import { publishMessage } from '../../pubsub'
 
 dotenv.config()
 
 const CLIENT_PUBLIC_KEY = process.env.CLIENT_PUBLIC_KEY
-const ZONE = process.env.ZONE || 'asia-northeast1-a'
-const INSTANCE_NAME = process.env.INSTANCE_NAME || 'valheim'
-const PROJECT_ID = process.env.PROJECT_ID || ''
 
 const app = express()
 
@@ -48,18 +45,18 @@ app.post('/', verifyKeyMiddleware(CLIENT_PUBLIC_KEY || ''), async (req, res) => 
   try {
     switch(option.name) {
       case 'status': {
-        const status = await instance.status(PROJECT_ID, ZONE, INSTANCE_NAME)
-        content = `サーバーの状態は ${status || '不明' } です`
+        await publishMessage('status')
+        content = `サーバーの状態を確認してます...`
         break
       }
       case 'stop': {
-        await instance.stop(PROJECT_ID, ZONE, INSTANCE_NAME)
-        content = `Valheimサーバーを停止してます。数分後に停止します。`
+        await publishMessage('stop')
+        content = `Valheimサーバーを停止してます...`
         break
       }
       case 'start': {
-        await instance.start(PROJECT_ID, ZONE, INSTANCE_NAME)
-        content = `Valheimサーバーを起動しています。数分後にアクセスしてみてください。`
+        await publishMessage('start')
+        content = `Valheimサーバーを起動しています...`
         break
       }
       default: {
@@ -69,6 +66,7 @@ app.post('/', verifyKeyMiddleware(CLIENT_PUBLIC_KEY || ''), async (req, res) => 
     }
   } catch(err) {
     sendError(err as Error)
+    return
   }
 
   res.status(200).send({

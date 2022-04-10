@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack && \\cp -f ./package.json ./dist && \\cp -f ./.env ./dist",
+    "build": "webpack && cp -f ./package.json ./dist/main && cp -f ./.env ./dist/main && cp -f ./package.json ./dist/compute && cp -f ./.env ./dist/compute",
     "register": "ts-node -r tsconfig-paths/register ./scripts/register.ts",
     "lint": "eslint --ext .ts --ignore-path .gitignore --fix",
-    "functions:deploy": "gcloud functions deploy main --source=./dist --entry-point=main --trigger-http --runtime=nodejs16 --region=asia-northeast1 --allow-unauthenticated",
-    "functions:destroy": "gcloud functions delete main"
+    "functions:deploy": "gcloud functions deploy main --source=./dist/main --entry-point=main --trigger-http --runtime=nodejs16 --region=asia-northeast1 --allow-unauthenticated",
+    "functions:destroy": "gcloud functions delete main",
+    "functions:compute:deploy": "gcloud functions deploy compute --source=./dist/compute --entry-point=main --runtime=nodejs16 --region=asia-northeast1 --allow-unauthenticated",
+    "functions:compute:destroy": "gcloud functions delete compute"
   },
   "keywords": [],
   "author": "",

@@ -17,9 +17,13 @@ module.exports = {
            }
        ]
    },
+   entry: {
+       'main/index': './src/functions/main/index.ts',
+       'compute/index': './src/functions/compute/index.ts',
+   },
    output: {
        path: __dirname + "/dist",
-       filename: "index.js",
+       filename: "[name].js",
        libraryTarget: "commonjs"
    }
 }
