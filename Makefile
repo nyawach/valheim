@@ -11,4 +11,4 @@ attach-startup-script:
 
 attach-shutdown-script:
 	gcloud compute instances add-metadata ${INSTANCE_NAME} \
-		--metadata-from-file startup-script=./scripts/shutdown.sh
+		--metadata-from-file shutdown-script=./scripts/shutdown.sh
