@@ -1,4 +1,4 @@
-# Valheim Discord Bot
+# Valheim Game Server Starter (with Discord bot)
 
 ## Setup
 
